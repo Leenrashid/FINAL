@@ -1,0 +1,545 @@
+import tkinter as tk
+from tkinter import messagebox, simpledialog
+import pickle
+import os
+from datetime import datetime
+class Ticket:
+    def __init__(self, ticketID, ticketType, price, validityPeriod, discount, limitations):
+        self._ticketID = ticketID
+        self._ticketType = ticketType
+        self._price = price
+        self._validityPeriod = validityPeriod
+        self._discount = discount
+        self._limitations = limitations
+
+    def getTicketID(self):
+        return self._ticketID
+
+    def getTicketType(self):
+        return self._ticketType
+
+    def getPrice(self):
+        return self._price
+
+    def getValidityPeriod(self):
+        return self._validityPeriod
+
+    def getDiscount(self):
+        return self._discount
+
+    def getLimitations(self):
+        return self._limitations
+
+    def setTicketID(self, ticketID):
+        self._ticketID = ticketID
+
+    def setTicketType(self, ticketType):
+        self._ticketType = ticketType
+
+    def setPrice(self, price):
+        self._price = price
+
+    def setValidityPeriod(self, validityPeriod):
+        self._validityPeriod = validityPeriod
+
+    def setDiscount(self, discount):
+        self._discount = discount
+
+    def setLimitations(self, limitations):
+        self._limitations = limitations
+
+    def calculatePrice(self):
+        return self._price * (1 - self._discount / 100)
+
+    def checkValidity(self, date):
+        return self._validityPeriod == date
+
+    def applyDiscount(self):
+        return self._price * (1 - self._discount / 100)
+
+
+class Visitor:
+    def __init__(self, visitorID, name, age, email, membershipStatus):
+        self._visitorID = visitorID
+        self._name = name
+        self._age = age
+        self._email = email
+        self._membershipStatus = membershipStatus
+        self._reservationHistory = []
+
+    def getVisitorID(self):
+        return self._visitorID
+
+    def getName(self):
+        return self._name
+
+    def getAge(self):
+        return self._age
+
+    def getEmail(self):
+        return self._email
+
+    def getMembershipStatus(self):
+        return self._membershipStatus
+
+    def getReservationHistory(self):
+        return self._reservationHistory
+
+    def setVisitorID(self, visitorID):
+        self._visitorID = visitorID
+
+    def setName(self, name):
+        self._name = name
+
+    def setAge(self, age):
+        self._age = age
+
+    def setEmail(self, email):
+        self._email = email
+
+    def setMembershipStatus(self, membershipStatus):
+        self._membershipStatus = membershipStatus
+
+    def setReservationHistory(self, reservationHistory):
+        self._reservationHistory = reservationHistory
+
+    def createReservation(self, ticket, date):
+        reservation = Reservation(f"R{len(self._reservationHistory) + 1}", date, ticket, self, 1, "Confirmed")
+        self._reservationHistory.append(reservation)
+        return reservation
+
+    def cancelReservation(self, reservationID):
+        for reservation in self._reservationHistory:
+            if reservation.getReservationID() == reservationID:
+                reservation.setStatus("Cancelled")
+                return reservation
+        return None
+
+    def updateContactInfo(self, email):
+        self._email = email
+
+
+class Reservation:
+    def __init__(self, reservationID, reservationDate, ticket, visitor, quantity, status):
+        self._reservationID = reservationID
+        self._reservationDate = reservationDate
+        self._ticket = ticket
+        self._visitor = visitor
+        self._quantity = quantity
+        self._status = status
+
+    def getReservationID(self):
+        return self._reservationID
+
+    def getReservationDate(self):
+        return self._reservationDate
+
+    def getTicket(self):
+        return self._ticket
+
+    def getVisitor(self):
+        return self._visitor
+
+    def getQuantity(self):
+        return self._quantity
+
+    def getStatus(self):
+        return self._status
+
+    def setReservationID(self, reservationID):
+        self._reservationID = reservationID
+
+    def setReservationDate(self, reservationDate):
+        self._reservationDate = reservationDate
+
+    def setTicket(self, ticket):
+        self._ticket = ticket
+
+    def setVisitor(self, visitor):
+        self._visitor = visitor
+
+    def setQuantity(self, quantity):
+        self._quantity = quantity
+
+    def setStatus(self, status):
+        self._status = status
+
+    def confirmReservation(self):
+        self._status = "Confirmed"
+
+    def cancelReservation(self):
+        self._status = "Cancelled"
+
+    def updateQuantity(self, newQuantity):
+        self._quantity = newQuantity
+
+
+class Payment:
+    def __init__(self, paymentID, paymentMethod, amount, paymentDate, status, visitor):
+        self._paymentID = paymentID
+        self._paymentMethod = paymentMethod
+        self._amount = amount
+        self._paymentDate = paymentDate
+        self._status = status
+        self._visitor = visitor
+
+    def getPaymentID(self):
+        return self._paymentID
+
+    def getPaymentMethod(self):
+        return self._paymentMethod
+
+    def getAmount(self):
+        return self._amount
+
+    def getPaymentDate(self):
+        return self._paymentDate
+
+    def getStatus(self):
+        return self._status
+
+    def getVisitor(self):
+        return self._visitor
+
+    def setPaymentID(self, paymentID):
+        self._paymentID = paymentID
+
+    def setPaymentMethod(self, paymentMethod):
+        self._paymentMethod = paymentMethod
+
+    def setAmount(self, amount):
+        self._amount = amount
+
+    def setPaymentDate(self, paymentDate):
+        self._paymentDate = paymentDate
+
+    def setStatus(self, status):
+        self._status = status
+
+    def setVisitor(self, visitor):
+        self._visitor = visitor
+
+    def processPayment(self):
+        self._status = "Completed"
+
+    def refundPayment(self):
+        self._status = "Refunded"
+
+    def checkPaymentStatus(self):
+        return self._status
+
+
+class Discount:
+    def __init__(self, discountID, discountType, value, eligibilityCriteria, validityPeriod, ticket):
+        self._discountID = discountID
+        self._discountType = discountType
+        self._value = value
+        self._eligibilityCriteria = eligibilityCriteria
+        self._validityPeriod = validityPeriod
+        self._ticket = ticket
+
+    def getDiscountID(self):
+        return self._discountID
+
+    def getDiscountType(self):
+        return self._discountType
+
+    def getValue(self):
+        return self._value
+
+    def getEligibilityCriteria(self):
+        return self._eligibilityCriteria
+
+    def getValidityPeriod(self):
+        return self._validityPeriod
+
+    def getTicket(self):
+        return self._ticket
+
+    def setDiscountID(self, discountID):
+        self._discountID = discountID
+
+    def setDiscountType(self, discountType):
+        self._discountType = discountType
+
+    def setValue(self, value):
+        self._value = value
+
+    def setEligibilityCriteria(self, eligibilityCriteria):
+        self._eligibilityCriteria = eligibilityCriteria
+
+    def setValidityPeriod(self, validityPeriod):
+        self._validityPeriod = validityPeriod
+
+    def setTicket(self, ticket):
+        self._ticket = ticket
+
+    def applyDiscount(self):
+        return self._ticket.getPrice() * (1 - self._value / 100)
+
+    def checkEligibility(self, visitor):
+        return visitor.getMembershipStatus() == "Member" and self._validityPeriod == "Always Valid"
+
+    def expireDiscount(self):
+        self._validityPeriod = "Expired"
+
+
+class Event:
+    def __init__(self, eventID, eventName, eventDate, location, ticketRequirement, status):
+        self._eventID = eventID
+        self._eventName = eventName
+        self._eventDate = eventDate
+        self._location = location
+        self._ticketRequirement = ticketRequirement
+        self._status = status
+
+    def getEventID(self):
+        return self._eventID
+
+    def getEventName(self):
+        return self._eventName
+
+    def getEventDate(self):
+        return self._eventDate
+
+    def getLocation(self):
+        return self._location
+
+    def getTicketRequirement(self):
+        return self._ticketRequirement
+
+    def getStatus(self):
+        return self._status
+
+    def setEventID(self, eventID):
+        self._eventID = eventID
+
+    def setEventName(self, eventName):
+        self._eventName = eventName
+
+    def setEventDate(self, eventDate):
+        self._eventDate = eventDate
+
+    def setLocation(self, location):
+        self._location = location
+
+    def setTicketRequirement(self, ticketRequirement):
+        self._ticketRequirement = ticketRequirement
+
+    def setStatus(self, status):
+        self._status = status
+
+    def addEventDetails(self):
+        pass
+
+    def checkTicketAvailability(self):
+        return "Available"
+
+    def cancelEvent(self):
+        self._status = "Cancelled"
+
+
+class Park:
+    def __init__(self, parkID, name, location, capacity, attractions, operatingHours):
+        self._parkID = parkID
+        self._name = name
+        self._location = location
+        self._capacity = capacity
+        self._attractions = attractions
+        self._operatingHours = operatingHours
+
+    def getParkID(self):
+        return self._parkID
+
+    def getName(self):
+        return self._name
+
+    def getLocation(self):
+        return self._location
+
+    def getCapacity(self):
+        return self._capacity
+
+    def getAttractions(self):
+        return self._attractions
+
+    def getOperatingHours(self):
+        return self._operatingHours
+
+    def setParkID(self, parkID):
+        self._parkID = parkID
+
+    def setName(self, name):
+        self._name = name
+
+    def setLocation(self, location):
+        self._location = location
+
+    def setCapacity(self, capacity):
+        self._capacity = capacity
+
+    def setAttractions(self, attractions):
+        self._attractions = attractions
+
+    def setOperatingHours(self, operatingHours):
+        self._operatingHours = operatingHours
+
+    def addAttraction(self, attraction):
+        self._attractions.append(attraction)
+
+    def checkCapacity(self):
+        return self._capacity > 0
+
+    def getOperatingHours(self):
+        return self._operatingHours
+
+
+def load_data(file_name):
+    """ Load data from Pickle file, returns empty dict if file doesn't exist """
+    if os.path.exists(file_name):
+        with open(file_name, 'rb') as file:
+            return pickle.load(file)
+    return {}
+
+
+def save_data(file_name, data):
+    """ Save data to Pickle file """
+    with open(file_name, 'wb') as file:
+        pickle.dump(data, file)
+
+
+# GUI with Tkinter
+
+class TicketBookingApp:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Adventure Land Ticket Booking")
+        self.root.geometry("600x500")
+
+        # Load data from files
+        self.visitors = load_data("visitors.pickle")
+        self.tickets = load_data("tickets.pickle")
+        self.reservations = load_data("reservations.pickle")
+        self.payments = load_data("payments.pickle")
+        self.current_user = None
+
+        # Create the GUI components
+        self.create_widgets()
+
+    def create_widgets(self):
+        # Login Screen
+        self.login_frame = tk.Frame(self.root)
+        self.login_frame.pack()
+
+        tk.Label(self.login_frame, text="Email:").grid(row=0, column=0)
+        self.email_entry = tk.Entry(self.login_frame)
+        self.email_entry.grid(row=0, column=1)
+
+        tk.Label(self.login_frame, text="Name:").grid(row=1, column=0)
+        self.name_entry = tk.Entry(self.login_frame)
+        self.name_entry.grid(row=1, column=1)
+
+        self.login_button = tk.Button(self.login_frame, text="Login/Create Account", command=self.login)
+        self.login_button.grid(row=2, column=0, columnspan=2)
+
+        # Ticket Selection Screen
+        self.ticket_frame = tk.Frame(self.root)
+        self.ticket_frame.pack_forget()
+
+        tk.Label(self.ticket_frame, text="Select Ticket Type").grid(row=0, column=0)
+
+        self.ticket_listbox = tk.Listbox(self.ticket_frame)
+        self.ticket_listbox.grid(row=1, column=0)
+
+        # Display tickets in listbox
+        for ticket in self.tickets.values():
+            self.ticket_listbox.insert(tk.END, f"{ticket.getTicketType()} - {ticket.getPrice()} DHS")
+
+        tk.Label(self.ticket_frame, text="Quantity:").grid(row=2, column=0)
+        self.quantity_entry = tk.Entry(self.ticket_frame)
+        self.quantity_entry.grid(row=3, column=0)
+
+        self.buy_button = tk.Button(self.ticket_frame, text="Purchase", command=self.purchase_ticket)
+        self.buy_button.grid(row=4, column=0)
+
+        # Payment Screen (simulated)
+        self.payment_frame = tk.Frame(self.root)
+        self.payment_frame.pack_forget()
+
+        tk.Label(self.payment_frame, text="Select Payment Method").grid(row=0, column=0)
+
+        self.payment_method = tk.Entry(self.payment_frame)
+        self.payment_method.grid(row=1, column=0)
+
+        self.payment_button = tk.Button(self.payment_frame, text="Pay", command=self.process_payment)
+        self.payment_button.grid(row=2, column=0)
+
+    def login(self):
+        email = self.email_entry.get()
+        name = self.name_entry.get()
+
+        if not email or not name:
+            messagebox.showerror("Input Error", "Please provide both email and name.")
+            return
+
+        if email not in self.visitors:
+            self.visitors[email] = Visitor(email, name, 30, email, "Member")
+
+        self.current_user = self.visitors[email]
+
+        # Hide login screen, show ticket selection
+        self.login_frame.pack_forget()
+        self.show_ticket_purchasing()
+
+        # Save updated visitor data
+        save_data("visitors.pickle", self.visitors)
+
+    def show_ticket_purchasing(self):
+        self.ticket_frame.pack()
+
+    def purchase_ticket(self):
+        selected_ticket_str = self.ticket_listbox.get(tk.ACTIVE)
+        ticket_type = selected_ticket_str.split(" - ")[0]
+        ticket = next(t for t in self.tickets.values() if t.getTicketType() == ticket_type)
+
+        quantity = self.quantity_entry.get()
+        if not quantity.isdigit() or int(quantity) <= 0:
+            messagebox.showerror("Input Error", "Please enter a valid quantity.")
+            return
+
+        reservation = self.current_user.createReservation(ticket, datetime.today().date())
+        messagebox.showinfo("Reservation", f"Reservation ID {reservation.getReservationID()} created successfully!")
+
+        # Save updated reservation data
+        save_data("reservations.pickle", self.reservations)
+
+        # Move to payment screen
+        self.ticket_frame.pack_forget()
+        self.show_payment_screen()
+
+    def show_payment_screen(self):
+        self.payment_frame.pack()
+
+    def process_payment(self):
+        payment_method = self.payment_method.get()
+        if not payment_method:
+            messagebox.showerror("Payment Error", "Please provide a payment method.")
+            return
+
+        # Process payment (just a simulation)
+        payment = Payment(f"PAY{len(self.payments) + 1}", payment_method, 200, datetime.today().date(), "Pending",
+                          self.current_user)
+        payment.processPayment()
+        self.payments[payment.getPaymentID()] = payment
+
+        messagebox.showinfo("Payment", f"Payment successful! Payment ID: {payment.getPaymentID()}")
+
+        # Save payment data
+        save_data("payments.pickle", self.payments)
+
+    def run(self):
+        self.root.mainloop()
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = TicketBookingApp(root)
+    app.run()
